@@ -18,12 +18,11 @@ import net.minecraft.client.render.VertexFormats;
 @Environment(EnvType.CLIENT)
 public class OptRenderer {
     MinecraftClient client;
-    boolean haveRenderManager = false;
     public static OptRenderer instance;
     private ArrayList<String> newChatLines;
-    boolean debug = true;
     private boolean initialized = false;
-    private int OptLifetime = 200; // 200 ticks = 10 seconds
+    private boolean OptEnabled = false;
+    private int OptLifetime = 100; // 200 ticks = 10 seconds
     public static String[] caseText;
 
     public OptRenderer(){
@@ -35,8 +34,6 @@ public class OptRenderer {
 
 
     public void onTickInGame(MinecraftClient client) {
-        if (!this.haveRenderManager)
-            loadRenderManager();
         if (!this.initialized)
             synchronized (this.newChatLines) {
                 for (String line : this.newChatLines) { //TODO: make the branches to check if line has a "**INPUT**"
@@ -48,18 +45,27 @@ public class OptRenderer {
                 }
                 this.newChatLines.clear();
             }
+
+        if (this.OptEnabled){
+            this.OptLifetime -= 1;
+            System.out.println(OptLifetime);
+            if (this.OptLifetime == 0){
+                this.OptEnabled = false;
+                render();
+                caseText = new String[]{"", ""};
+            }
+        }
+
     }
 
-    private void loadRenderManager() {
-        System.out.println("getting renderer");
-        this.haveRenderManager = true;
-    }
     
 
     public void clientString(String var1) {
         if (!this.initialized)
             synchronized (this.newChatLines) {
                 this.newChatLines.add(var1);
+                this.OptEnabled = true;
+                this.OptLifetime = 100;
             }
     }
 
@@ -74,7 +80,7 @@ public class OptRenderer {
         Matcher matcher = PATTERN_BRACKET.matcher(text);
 
         String pureText = text;
-        String findText = new String();
+        String findText;
 
         int caseIdx = 0;
         while(matcher.find()) {
@@ -92,19 +98,37 @@ public class OptRenderer {
     }
 
     public void render() {
-        TextRenderer renderer = client.textRenderer;
-        GlStateManager.pushMatrix();
+        int offset = 240;
         int x1 = 20;
         int x2 = 200;
         int y1 = 150;
-        int y2 = 100;
+        int y2 = 200;
+        if (this.OptEnabled) {
+            TextRenderer renderer = client.textRenderer;
+            GlStateManager.pushMatrix();
+            float alpha = 0.3F;
+            drawRect(x1, x2, y1, y2, alpha);
+            drawRect(x1 + offset, x2 + offset, y1, y2, alpha);
+            renderer.draw(caseText[0], 30, 160, 0xFFFFFF);
+            renderer.draw(caseText[1], 30 + offset, 160, 0xFFFFFF);
+            GlStateManager.popMatrix();
+        }
+        else{
+            float alpha = 0.0F;
+            GlStateManager.pushMatrix();
+            drawRect(x1, x2, y1, y2, alpha);
+            drawRect(x1 + offset, x2 + offset, y1, y2, alpha);
+            GlStateManager.popMatrix();
+        }
+    }
 
+    public void drawRect(int x1, int x2, int y1, int y2, float alpha){
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
         GlStateManager.enableBlend();
         GlStateManager.disableTexture();
         GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-        GlStateManager.color4f(0.1F, 0.1F, 0.1F, 0.3F);
+        GlStateManager.color4f(0.1F, 0.1F, 0.1F, alpha);
         bufferBuilder.begin(7, VertexFormats.POSITION);
         bufferBuilder.vertex((double)x1, (double)y2, 0.0D).next();
         bufferBuilder.vertex((double)x2, (double)y2, 0.0D).next();
@@ -113,10 +137,6 @@ public class OptRenderer {
         tessellator.draw();
         GlStateManager.enableTexture();
         GlStateManager.disableBlend();
-
-
-        renderer.draw(caseText[0], 30, 160, 0xFFFFFF);
-        GlStateManager.popMatrix();
     }
 
 
