@@ -1,8 +1,7 @@
-# Fabric ChatBubbles mod
-Reverse-engineered Minecraft chatbubbles mod
+# Fabric OptHud mod
+This mod can show customized HUD for opt of minecraft task in K-HCP. 
 
 ## Setup
-
 
 For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
 
