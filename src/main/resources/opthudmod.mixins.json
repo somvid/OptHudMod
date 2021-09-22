@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.jwparks.opthudmod.main.mixins",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "OptGetterMixin",
+    "OptRenderMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
